@@ -1,0 +1,20 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>고정 자세 · 실제 부품 조합 검수</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e5d5;color:#173c43;font:17px/1.6 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:22px 16px}h1{font-size:28px}h2{font-size:21px}p{max-width:760px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}article{background:#fff8df;border:3px solid #173c43;padding:10px}canvas{display:block;width:100%;image-rendering:pixelated}label{display:block;font-size:15px;font-weight:bold;margin-top:8px}select{font:inherit;padding:7px;max-width:100%;border:1px solid #173c43;background:#fff8df}.controls{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}img{max-width:100%}.note{font-size:14px;color:#53675d}@media(max-width:550px){.grid{grid-template-columns:1fr}}</style></head><body><main><h1>고정 자세 · 실제 부품 조합</h1><p>하나의 배경과 몸에 헤어·의상·도구를 바꿔 겹친 화면입니다. 아래 그림은 결과별로 새로 생성한 완성 이미지가 아니라 브라우저에서 같은 재료를 조합한 것입니다.</p><p id="status">재료 불러오는 중…</p><div class="controls"><label>헤어 <select id="hair"><option value="1">상투</option><option value="2">짧은 머리</option></select></label><label>의상 <select id="cloth"><option value="3">청록 도포</option><option value="4">갈색 여행복</option></select></label><label>도구 <select id="tool"><option value="5">주전자</option><option value="6">장부</option></select></label></div><article><h2>직접 부품 교체하기</h2><canvas id="live" aria-label="부품을 조합한 캐릭터"></canvas></article><h2>다른 부품 조합 예시</h2><div class="grid" id="examples"></div><details><summary>사용한 부품 원본 보기</summary><p class="note">기본 몸·헤어 2종·의상 2종·도구 2종·앞 손 레이어</p><img src="assets/pose-v2/parts.png" alt="고정 자세 조합 부품 시트"></details><p class="note">아직 검수용입니다. 시트에서 분리해 겹치는 방식과 손 위치를 확인하며, 자동 생성 재료의 위치 오차는 보정 후 적용합니다. 본 앱에는 아직 연결하지 않았습니다.</p></main><script>
+const bg=new Image(),parts=new Image();bg.src='assets/pose-v2/background.png';parts.src='assets/pose-v2/parts.png';
+const loaded=i=>new Promise((ok,no)=>{i.onload=ok;i.onerror=no;if(i.complete&&i.naturalWidth)ok()});
+function draw(canvas,hair,cloth,tool){canvas.width=320;canvas.height=320;const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(bg,0,0,320,320);
+c.save();c.translate(160,210);c.scale(.7,.7);c.translate(-160,-210);
+const piece=(box,dest)=>c.drawImage(parts,...box,...dest);
+// Explicit source bounds and shared destination anchors, calibrated from this atlas.
+piece([55,142,284,428],[120,89,83,125]);
+if(cloth===3)piece([1206,273,286,290],[120,139,83,84]);
+else piece([43,674,312,300],[118,139,86,84]);
+if(hair===1)piece([435,60,251,281],[126,65,73,82]);
+else piece([830,100,230,224],[128,81,70,68]);
+// Left base hand in front of sleeve, then item at fixed right-hand anchor.
+piece([109,391,62,55],[132,173,18,16]);
+if(tool===5)piece([625,724,141,138],[187,168,35,34]);
+else piece([975,721,112,129],[187,161,30,35]);
+piece([1283,756,83,76],[185,172,17,16]);c.restore();
+}
+Promise.all([loaded(bg),loaded(parts)]).then(()=>{document.getElementById('status').textContent='공통 부품으로 8가지 조합을 확인합니다.';const update=()=>draw(document.getElementById('live'),Number(document.getElementById('hair').value),Number(document.getElementById('cloth').value),Number(document.getElementById('tool').value));document.querySelectorAll('select').forEach(s=>s.onchange=update);update();for(const h of [1,2])for(const o of [3,4])for(const t of [5,6]){const a=document.createElement('article');const label=document.createElement('label');label.textContent=`${h===1?'상투':'짧은 머리'} · ${o===3?'청록 도포':'갈색 여행복'} · ${t===5?'주전자':'장부'}`;const canvas=document.createElement('canvas');draw(canvas,h,o,t);a.append(canvas,label);document.getElementById('examples').append(a)}}).catch(()=>document.getElementById('status').textContent='이미지를 불러오지 못했습니다.');
+</script></body></html>
